@@ -521,6 +521,49 @@ syncBaselinesToSupabase(updated);
     setReadings({});
     setHealthNotes("");
     setMessage("Health assessment saved successfully.");
+    // Save daily health assessment to Supabase
+    (async () => {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+          setMessage(
+            "Health assessment saved locally. Cloud session unavailable."
+          );
+          return;
+        }
+
+        const { error } = await supabase
+          .from("health_assessments")
+          .insert({
+            user_id: user.id,
+            assessment_date: record.date,
+            readings: record.values,
+            activity_context: record.activityContext || null,
+            glucose_context: record.glucoseContext || null,
+            notes: record.notes || null,
+          });
+
+        if (error) throw error;
+
+        setMessage(
+          "✅ Health assessment saved locally and to Supabase!"
+        );
+        console.log("Daily health assessment saved to Supabase.");
+      } catch (error) {
+        console.error("Health assessment sync failed:", error);
+        setMessage(
+          "Saved locally, but cloud sync failed: " +
+          (error.message || "Unknown error")
+        );
+      }
+    })();
+
   }
 
   function baselineDifference(metricId, rawValue) {
@@ -565,6 +608,44 @@ syncBaselinesToSupabase(updated);
         },
       ],
     });
+    // Save pantry item to Supabase
+    (async () => {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+          setMessage("Pantry saved locally. Cloud session unavailable.");
+          return;
+        }
+
+        const { error } = await supabase
+          .from("pantry_items")
+          .insert({
+            user_id: user.id,
+            food_id: Number(pantryFood),
+            quantity: quantity,
+            expiry_date: pantryExpiry || null,
+          });
+
+        if (error) throw error;
+
+        setMessage("✅ Pantry item saved locally and to Supabase!");
+        console.log("Pantry item saved to Supabase.");
+      } catch (error) {
+        console.error("Pantry sync failed:", error);
+        setMessage(
+          "Saved locally, but cloud sync failed: " +
+          (error.message || "Unknown error")
+        );
+      }
+    })();
+
+
 
     setMessage("Food supplies added to the pantry.");
   }
@@ -625,6 +706,43 @@ syncBaselinesToSupabase(updated);
     });
 
     setMessage(`${food.name} added to today's food log.`);
+    // Save meal to Supabase
+    (async () => {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+          setMessage("Meal saved locally. Cloud session unavailable.");
+          return;
+        }
+
+        const { error } = await supabase
+          .from("meal_logs")
+          .insert({
+            user_id: user.id,
+            food_id: Number(food.id),
+            meal_date: today,
+          });
+
+        if (error) throw error;
+
+        setMessage("✅ Meal saved locally and to Supabase!");
+        console.log("Meal log saved to Supabase.");
+      } catch (error) {
+        console.error("Meal sync failed:", error);
+        setMessage(
+          "Meal saved locally, but cloud sync failed: " +
+          (error.message || "Unknown error")
+        );
+      }
+    })();
+
+
   }
 
   function logExercise(exercise) {
@@ -651,6 +769,44 @@ syncBaselinesToSupabase(updated);
         ...data.exercises,
       ],
     });
+    // Save exercise session to Supabase
+    (async () => {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+          setMessage("Exercise saved locally. Cloud session unavailable.");
+          return;
+        }
+
+        const { error } = await supabase
+          .from("exercise_logs")
+          .insert({
+            user_id: user.id,
+            exercise_name: exercise.name,
+            minutes: minutes,
+            exercise_date: today,
+          });
+
+        if (error) throw error;
+
+        setMessage("✅ Exercise saved locally and to Supabase!");
+        console.log("Exercise log saved to Supabase.");
+      } catch (error) {
+        console.error("Exercise sync failed:", error);
+        setMessage(
+          "Exercise saved locally, but cloud sync failed: " +
+          (error.message || "Unknown error")
+        );
+      }
+    })();
+
+
 
     setExerciseInputs({
       ...exerciseInputs,
